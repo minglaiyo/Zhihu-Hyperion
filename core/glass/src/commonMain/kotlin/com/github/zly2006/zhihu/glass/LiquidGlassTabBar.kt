@@ -60,7 +60,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -227,10 +226,7 @@ fun LiquidGlassTabBar(
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
             .then(bottomSpacing)
-            .padding(horizontal = 24.dp)
-            // 按压/拖动时指示器会放大，缩放后不能画出栏外、贴到屏幕边缘：
-            // 裁到栏自身的 24dp 边距范围内，胶囊圆角始终完整显示。
-            .clipToBounds(),
+            .padding(horizontal = 24.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
         CompositionLocalProvider(LocalContentColor provides contentColor) {
