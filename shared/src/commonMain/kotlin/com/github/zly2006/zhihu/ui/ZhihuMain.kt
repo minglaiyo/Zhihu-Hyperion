@@ -52,6 +52,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -61,9 +69,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.ShortNavigationBar
-import androidx.compose.material3.ShortNavigationBarItem
-import androidx.compose.material3.ShortNavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.WideNavigationRail
 import androidx.compose.material3.WideNavigationRailItem
@@ -86,7 +91,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -809,33 +813,51 @@ fun ZhihuMain(
                                                 backdrop = glassBackdrop,
                                             )
                                         } else {
-                                            ShortNavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh) {
-                                                val itemColors = ShortNavigationBarItemDefaults.colors(
-                                                    selectedIndicatorColor = Color.Transparent,
-                                                )
+                                            // 布局优先：不再用 ShortNavigationBar 这个黑盒组件，
+                                            // 也不再外面套 Box 包边。直接用 Row，标签各占一份
+                                            // 权重，胶囊底色和边距都写在 Row 自己身上，不裁剪，
+                                            // 系统导航栏边距只在这里处理一次。
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
+                                                    .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
+                                                    .padding(horizontal = 24.dp)
+                                                    .padding(bottom = 8.dp)
+                                                    .background(
+                                                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                                        shape = CircleShape,
+                                                    )
+                                                    .padding(vertical = 10.dp),
+                                            ) {
                                                 bottomBarItems.forEachIndexed { index, item ->
                                                     if (showBottomCreateEntry && index == bottomBarItems.size / 2) {
-                                                        ShortNavigationBarItem(
-                                                            selected = false,
-                                                            onClick = { showBottomCreateMenu = true },
-                                                            icon = { Icon(AppIcons.Add, contentDescription = "发布") },
-                                                            label = { Text("发布") },
-                                                            colors = itemColors,
-                                                            modifier = Modifier.testTag(MAIN_CREATE_NAV_BUTTON_TAG),
-                                                        )
+                                                        Column(
+                                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                                            modifier = Modifier
+                                                                .weight(1f)
+                                                                .clickable { showBottomCreateMenu = true }
+                                                                .testTag(MAIN_CREATE_NAV_BUTTON_TAG)
+                                                                .padding(vertical = 2.dp),
+                                                        ) {
+                                                            Icon(AppIcons.Add, contentDescription = "发布", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                                            Text("发布", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
+                                                        }
                                                     }
                                                     val destination = item.destination
                                                     val selected = currentBottomDestination?.let { it::class == destination::class } == true
-                                                    ShortNavigationBarItem(
-                                                        selected = selected,
-                                                        onClick = { onTopLevelItemClick(destination, selected) },
-                                                        icon = {
-                                                            Icon(if (selected) item.selectedIcon else item.icon, contentDescription = item.label)
-                                                        },
-                                                        label = { Text(item.label) },
-                                                        colors = itemColors,
-                                                        modifier = Modifier.testTag("nav_tab_${destination.name.lowercase()}"),
-                                                    )
+                                                    val itemColor = if (selected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurfaceVariant
+                                                    Column(
+                                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                                        modifier = Modifier
+                                                            .weight(1f)
+                                                            .clickable { onTopLevelItemClick(destination, selected) }
+                                                            .testTag("nav_tab_${destination.name.lowercase()}")
+                                                            .padding(vertical = 2.dp),
+                                                    ) {
+                                                        Icon(if (selected) item.selectedIcon else item.icon, contentDescription = item.label, tint = itemColor)
+                                                        Text(item.label, color = itemColor, style = MaterialTheme.typography.labelMedium)
+                                                    }
                                                 }
                                             }
                                         }
