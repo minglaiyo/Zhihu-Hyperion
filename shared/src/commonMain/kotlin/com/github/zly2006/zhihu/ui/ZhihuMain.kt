@@ -26,10 +26,12 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
@@ -761,8 +763,16 @@ fun ZhihuMain(
                                 AnimatedVisibility(
                                     visible = showMainNavigation && (!autoHideBottomBar || isBottomBarVisible),
                                     modifier = Modifier.onSizeChanged { bottomBarHeightPx = it.height },
-                                    enter = slideInVertically(motion.slowSpatialSpec()) { it },
-                                    exit = slideOutVertically(motion.slowSpatialSpec()) { it },
+                                    // 只用 slide 时，AnimatedVisibility 在动画期间仍占满高度、
+                                    // 动画结束才瞬间归零：Scaffold 的 innerPadding 在动画期间
+                                    // 仍是满高度，底栏滑下去后露出来的就是这块 padding 的空白，
+                                    // 结束时 body 又瞬间下跳，造成断层。
+                                    // 加上 expand/shrink 后，高度和位移用同一 spec 同步变化，
+                                    // innerPadding 跟着一起缩，列表内容自然延伸到底部。
+                                    enter = slideInVertically(motion.slowSpatialSpec()) { it } +
+                                        expandVertically(motion.slowSpatialSpec(), expandFrom = Alignment.Bottom),
+                                    exit = slideOutVertically(motion.slowSpatialSpec()) { it } +
+                                        shrinkVertically(motion.slowSpatialSpec(), shrinkTowards = Alignment.Bottom),
                                 ) {
                                     Box {
                                         if (glassBackdrop != null) {
