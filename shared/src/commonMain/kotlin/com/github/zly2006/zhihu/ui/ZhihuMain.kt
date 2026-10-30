@@ -37,7 +37,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -45,24 +44,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -816,55 +809,33 @@ fun ZhihuMain(
                                                 backdrop = glassBackdrop,
                                             )
                                         } else {
-                                            // 非玻璃路径之前是满宽矩形底栏，左右直接贴到屏幕边缘。
-                                            // #2 曾直接裁剪栏本身（CircleShape clip），真机上标签消失了，
-                                            // 这次不裁剪栏、不动栏内部布局：只在外层留 24dp 左右边距、
-                                            // 底部留 8dp，并在外层画一个胶囊形底色，栏本身改成透明底，
-                                            // 视觉上就是悬浮胶囊，标签的测量和绘制完全不受影响。
-                                            // 玻璃路径本身已有 24dp 边距，这次不动它。
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal))
-                                                    .padding(horizontal = 24.dp)
-                                                    .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-                                                    .padding(bottom = 8.dp)
-                                                    .background(
-                                                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                                        shape = CircleShape,
-                                                    ),
-                                            ) {
-                                                ShortNavigationBar(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    containerColor = Color.Transparent,
-                                                ) {
-                                                    val itemColors = ShortNavigationBarItemDefaults.colors(
-                                                        selectedIndicatorColor = Color.Transparent,
-                                                    )
-                                                    bottomBarItems.forEachIndexed { index, item ->
-                                                        if (showBottomCreateEntry && index == bottomBarItems.size / 2) {
-                                                            ShortNavigationBarItem(
-                                                                selected = false,
-                                                                onClick = { showBottomCreateMenu = true },
-                                                                icon = { Icon(AppIcons.Add, contentDescription = "发布") },
-                                                                label = { Text("发布") },
-                                                                colors = itemColors,
-                                                                modifier = Modifier.testTag(MAIN_CREATE_NAV_BUTTON_TAG),
-                                                            )
-                                                        }
-                                                        val destination = item.destination
-                                                        val selected = currentBottomDestination?.let { it::class == destination::class } == true
+                                            ShortNavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                                                val itemColors = ShortNavigationBarItemDefaults.colors(
+                                                    selectedIndicatorColor = Color.Transparent,
+                                                )
+                                                bottomBarItems.forEachIndexed { index, item ->
+                                                    if (showBottomCreateEntry && index == bottomBarItems.size / 2) {
                                                         ShortNavigationBarItem(
-                                                            selected = selected,
-                                                            onClick = { onTopLevelItemClick(destination, selected) },
-                                                            icon = {
-                                                                Icon(if (selected) item.selectedIcon else item.icon, contentDescription = item.label)
-                                                            },
-                                                            label = { Text(item.label) },
+                                                            selected = false,
+                                                            onClick = { showBottomCreateMenu = true },
+                                                            icon = { Icon(AppIcons.Add, contentDescription = "发布") },
+                                                            label = { Text("发布") },
                                                             colors = itemColors,
-                                                            modifier = Modifier.testTag("nav_tab_${destination.name.lowercase()}"),
+                                                            modifier = Modifier.testTag(MAIN_CREATE_NAV_BUTTON_TAG),
                                                         )
                                                     }
+                                                    val destination = item.destination
+                                                    val selected = currentBottomDestination?.let { it::class == destination::class } == true
+                                                    ShortNavigationBarItem(
+                                                        selected = selected,
+                                                        onClick = { onTopLevelItemClick(destination, selected) },
+                                                        icon = {
+                                                            Icon(if (selected) item.selectedIcon else item.icon, contentDescription = item.label)
+                                                        },
+                                                        label = { Text(item.label) },
+                                                        colors = itemColors,
+                                                        modifier = Modifier.testTag("nav_tab_${destination.name.lowercase()}"),
+                                                    )
                                                 }
                                             }
                                         }
