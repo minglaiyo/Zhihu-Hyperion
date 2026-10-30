@@ -1,0 +1,41 @@
+name: Android only
+
+# 只编 Android Lite debug 包，不跑 KtLint/detekt、单元测试、桌面、iOS 和模拟器测试。
+# 仅用于 fork 分支上快速验证底栏改动，不要合入上游。
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    name: Android Lite debug build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up build toolchain
+        uses: ./.github/actions/setup-build
+        with:
+          android-sdk: "true"
+
+      - name: Build Lite APKs
+        run: ./gradlew assembleLiteDebug --max-workers=2
+
+      - name: Prepare Lite debug APK
+        run: |
+          mkdir -p app/build/upload
+          cp app/build/outputs/apk/lite/debug/app-lite-debug.apk app/build/upload/zhihu-hyperion-lite-debug.apk
+
+      - name: Upload Lite debug APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lite-debug-apk
+          path: app/build/upload/
+          retention-days: 7
