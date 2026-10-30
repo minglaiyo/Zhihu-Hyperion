@@ -1,0 +1,32 @@
+name: Android signed debug
+
+on:
+  workflow_dispatch:
+
+jobs:
+  android-signed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-build
+        with:
+          android-sdk: "true"
+      - name: Restore fixed debug keystore
+        run: |
+          mkdir -p ~/.android
+          echo "${{ secrets.HYPERION_DEBUG_KEYSTORE_BASE64 }}" | base64 -d > ~/.android/debug.keystore
+          chmod 600 ~/.android/debug.keystore
+      - name: Build Lite debug APK
+        run: ./gradlew assembleLiteDebug --max-workers=2
+      - name: Prepare signed debug APK
+        run: |
+          mkdir -p app/build/upload
+          cp app/build/outputs/apk/lite/debug/app-lite-debug.apk app/build/upload/zhihu-hyperion-lite-debug.apk
+      - name: Upload signed debug APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: lite-debug-signed-apk
+          path: app/build/upload/zhihu-hyperion-lite-debug.apk
+          retention-days: 7
